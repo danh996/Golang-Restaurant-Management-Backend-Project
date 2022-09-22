@@ -1,13 +1,16 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 
 	"github.com/danh996/go-destiny/book"
 	"github.com/danh996/go-destiny/database"
 	"github.com/gofiber/fiber"
-	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+
+	_ "github.com/lib/pq"
 )
 
 func setupRoutes(app *fiber.App) {
@@ -18,15 +21,16 @@ func setupRoutes(app *fiber.App) {
 }
 
 func initDatabase() {
-	var err error
-	database.DBConn, err = gorm.Open("sqlite3", "books.db")
+	connStr := "user=pqgotest dbname=pqgotest sslmode=verify-full"
+	_, err := sql.Open("postgres", connStr)
 	if err != nil {
-		panic("failed to connect database")
+		log.Fatal(err)
 	}
-	fmt.Println("Connection Opened to Database")
-	database.DBConn.AutoMigrate(&book.Book{})
-	fmt.Println("Database Migrated")
+	fmt.Println("Connect to Postgres Database Success")
+	// database.DBConn.AutoMigrate(&book.Book{})
+	// fmt.Println("Database Migrated")
 }
+
 func main() {
 	app := fiber.New()
 	initDatabase()
