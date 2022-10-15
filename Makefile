@@ -1,51 +1,21 @@
-name: ci-test
+DB_URL=postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+postgres:
+	docker run --name postgres12 -p 5433:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:12-alpine
 
-jobs:
+createdb:
+	docker exec -it postgres12 createdb --username=root --owner=root simple_bank
+	
+dropdb:
+	docker exec -it postgres12 dropdb simple_bank
 
-  test:
-    name: Test
-    runs-on: ubuntu-latest
+migrateup:
+	migrate -path db/migration -database "$(DB_URL)" -verbose up
 
-    services:
-      postgres:
-        image: postgres:12
-        env:
-          POSTGRES_USER: root
-          POSTGRES_PASSWORD: secret
-          POSTGRES_DB: simple_bank
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v2
-      with:
-        go-version: ^1.15
-      id: go
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-
-    - name: Install golang-migrate
-      run: |
-        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.12.2/migrate.linux-amd64.tar.gz | tar xvz
-        sudo mv migrate.linux-amd64 /usr/bin/migrate
-        which migrate
-
-    - name: Run migrations
-      run: make migrateup
-
-    - name: Test
-      run: make test
+sqlc:
+	sqlc generate
+	
+test:
+	go test -v -cover ./...
+	
+.PHONY: postgres createdb dropdb
