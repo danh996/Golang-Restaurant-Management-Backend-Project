@@ -2,41 +2,31 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
-	"github.com/danh996/go-destiny/book"
-	"github.com/danh996/go-destiny/database"
-	"github.com/gofiber/fiber"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
-
+	"github.com/danh996/go-destiny/api"
+	db "github.com/danh996/go-destiny/db/sqlc"
 	_ "github.com/lib/pq"
 )
 
-func setupRoutes(app *fiber.App) {
-	app.Get("/api/v1/book", book.GetBooks)
-	app.Get("/api/v1/book/:id", book.GetBook)
-	app.Post("/api/v1/book", book.NewBook)
-	app.Delete("/api/v1/book/:id", book.DeleteBook)
-}
-
-func initDatabase() {
-	connStr := "user=pqgotest dbname=pqgotest sslmode=verify-full"
-	_, err := sql.Open("postgres", connStr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Connect to Postgres Database Success")
-	// database.DBConn.AutoMigrate(&book.Book{})
-	// fmt.Println("Database Migrated")
-}
+const (
+	dbDriver      = "postgres"
+	dbSource      = "postgresql://root:secret@localhost:5433/simple_bank?sslmode=disable"
+	serverAddress = "0.0.0.0:8080"
+)
 
 func main() {
-	app := fiber.New()
-	initDatabase()
+	conn, err := sql.Open(dbDriver, dbSource)
+	if err != nil {
+		log.Fatal("cannot connect to db:", err)
+	}
 
-	setupRoutes(app)
-	app.Listen(3000)
+	store := db.NewStore(conn)
+	server := api.NewServer(store)
 
-	defer database.DBConn.Close()
+	err = server.Start(serverAddress)
+	if err != nil {
+		log.Fatal("cannot start server:", err)
+	}
+
 }
