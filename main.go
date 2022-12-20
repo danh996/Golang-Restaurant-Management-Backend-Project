@@ -1,16 +1,17 @@
 package main
 
 import (
-	"database/sql"
-	"log"
 	"os"
 
-	"github.com/danh996/go-destiny/api"
-	db "github.com/danh996/go-destiny/db/sqlc"
-	"github.com/danh996/go-destiny/util"
+	"github.com/danh996/Golang-Restaurant-Management-Backend-Project/database"
+	"github.com/danh996/Golang-Restaurant-Management-Backend-Project/middleware"
+	"github.com/danh996/Golang-Restaurant-Management-Backend-Project/routes"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+var foodCollection *mongo.Collection = database.OpenCollection(database.Client, "food")
 
 func main() {
 	port := os.Getenv("PORT")
@@ -18,7 +19,18 @@ func main() {
 		port = "8000"
 	}
 
-	router:= gin.New()
+	router := gin.New()
 	router.Use(gin.Logger())
-	
+
+	routes.UserRoutes(router)
+	router.Use(middleware.Authentication())
+
+	routes.FoodRoutes(router)
+	routes.MenuRoutes(router)
+	routes.TableRoutes(router)
+	routes.OrderRoutes(router)
+	routes.OrderRoutes(router)
+	routes.OrderItemRoutes(router)
+
+	router.Run(":" + port)
 }
