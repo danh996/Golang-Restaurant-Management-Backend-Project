@@ -3,29 +3,22 @@ package main
 import (
 	"database/sql"
 	"log"
+	"os"
 
 	"github.com/danh996/go-destiny/api"
 	db "github.com/danh996/go-destiny/db/sqlc"
 	"github.com/danh996/go-destiny/util"
+	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	config, err := util.LoadConfig(".")
-	if err != nil {
-		log.Fatal("cannot load config:", err)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
 	}
 
-	conn, err := sql.Open(config.DBDriver, config.DBSource)
-	if err != nil {
-		log.Fatal("cannot connect to db:", err)
-	}
-
-	store := db.NewStore(conn)
-	server := api.NewServer(store)
-
-	err = server.Start(config.ServerAddress)
-	if err != nil {
-		log.Fatal("cannot start server:", err)
-	}
+	router:= gin.New()
+	router.Use(gin.Logger())
+	
 }
