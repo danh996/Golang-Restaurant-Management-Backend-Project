@@ -1,9 +1,13 @@
 package routes
 
-import "github.com/gin-gonic/gin"
+import (
+	controller "github.com/danh996/Golang-Restaurant-Management-Backend-Project/controllers"
+	"github.com/gin-gonic/gin"
+)
 
-func FoodRoutes(router *gin.Engine) {
-	router.GET("/ping", func(c *gin.Context) {
-		c.String(200, "pong")
-	})
+func FoodRoutes(incomingRouter *gin.Engine) {
+	incomingRouter.GET("/food", controller.GetFoods())
+	incomingRouter.GET("/foods/:food_id", controller.GetFood())
+	incomingRouter.POST("/foods/:food_id", controller.CreateFood())
+	incomingRouter.PATCH("/foods/:food_id", controller.UpdateFood())
 }
